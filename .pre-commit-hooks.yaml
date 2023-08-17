@@ -1,0 +1,7 @@
+- id: formatBwp
+  name: formatBwp
+  description: Format allo expressions inside the bwp files of Tibco
+  entry: ./script.sh
+  language: script
+  types: [file]
+  files: \.bwp$
