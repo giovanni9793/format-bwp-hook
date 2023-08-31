@@ -1,8 +1,17 @@
 #!/bin/bash
 
+decryptXmllintFormat(){
+	# implicit encoding https://webfocusinfocenter.informationbuilders.com/wfappent/TL2s/TL_lang/source/xmlencod.htm
+	echo "$1"\
+	| sed -z 's|"\([^"]*\)\&lt;\([^"]*\)"|"\1<\2"|g'\
+	| sed -z 's|"\([^"]*\)\&gt;\([^"]*\)"|"\1>\2"|g'
+	# | sed -z 's|"\([^"]*\)\&amp;\([^"]*\)"|"\1&\2"|g'
+	# | sed -z 's|"\([^"]*\)\&apos;\([^"]*\)"|"\1''\2"|g'
+}
+
 encryptXml(){
 	echo "$1" | sed -z 's|<|\&lt;|g'\
-	| sed -z 's|"|\&quot;|g'
+	| sed -z 's|"|\&quot;|g' # should be last conversion
 }
 partialEncryptXml(){
 	echo "$1" | sed -z 's|\&#xa;|\&#10;|g'
@@ -47,8 +56,10 @@ do
 			echo "skip"
 			continue
 		fi
-		foundFormatted=$(echo ${foundDecryped} | xmllint --format -)
-		result=$(encryptXml "${foundFormatted}")
+		# implicit encoding https://webfocusinfocenter.informationbuilders.com/wfappent/TL2s/TL_lang/source/xmlencod.htm
+		foundFormatted=$(xmllint --format <(echo "${foundDecryped}"))
+		foundXmllintDecrypted=$(decryptXmllintFormat "${foundFormatted}")
+		result=$(encryptXml "${foundXmllintDecrypted}")
 		result=$(echo "${result}" | sed -z "s|\\n|${placeHolder}|g")
 		sed2=$(prepareReplace "${result}")
 		data=$(sed -z -f <(echo "s|expression=\"\([^\"]*\)\"|expression=\"${sed2}\"|") "${prefix}${inputNo}")
